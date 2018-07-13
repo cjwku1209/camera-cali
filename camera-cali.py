@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 img_top = cv2.imread('data/chessboard_normal.png')
-img_bottom = cv2.imread('data/back.JPG')
+img_bottom = cv2.imread('data/chessboard_thermal.png')
 
 img_top_grey = cv2.cvtColor(img_top, cv2.COLOR_BGR2GRAY)
 img_bottom_grey = cv2.cvtColor(img_bottom, cv2.COLOR_BGR2GRAY)
@@ -17,25 +17,42 @@ objp1[:,:2] = np.mgrid[0:6,0:8].T.reshape(-1,2)
 objpoints1 = [] # 3d point in real world space
 imgpoints1 = [] # 2d points in image plane.
 
-# corners = cv2.goodFeaturesToTrack(img_top_grey,25,0.01,10)
-# corners = np.int0(corners)
-#
-# for i in corners:
-#     x,y = i.ravel()
-#     cv2.circle(img_top,(x,y),3,(0,0,255),-1)
-#
-# cv2.imshow('Corners',img_top)
-# cv2.waitKey(20000)
-
 ret, corners = cv2.findChessboardCorners(img_top_grey, (6,8),flags = cv2.CALIB_CB_ADAPTIVE_THRESH)
 # If found, add object points, image points (after refining them)
 print(ret)
-if ret == True:
-    objpoints1.append(objp1)
-    cv2.cornerSubPix(img_top_grey, corners,(11,11),(-1,-1),criteria)
-    imgpoints1.append(corners)
+# if ret == True:
+#     objpoints1.append(objp1)
+#     cv2.cornerSubPix(img_top_grey, corners,(11,11),(-1,-1),criteria)
+#     imgpoints1.append(corners)
+#
+#     # Draw and display the corners
+#     cv2.drawChessboardCorners(img_top, (6,8), corners, ret)
+#     cv2.imshow('img',img_top)
+#     cv2.waitKey(100000)
 
-    # Draw and display the corners
-    cv2.drawChessboardCorners(img_top, (6,8), corners, ret)
-    cv2.imshow('img',img_top)
-    cv2.waitKey(100000)
+# cv2.imshow('img',img_bottom_grey)
+# cv2.waitKey(100000)
+
+equ = cv2.equalizeHist(img_bottom_grey)
+# cv2.imshow('img',equ)
+# cv2.waitKey(100000)
+
+cv2.imshow('img',img_bottom_grey)
+# cv2.waitKey(100000)
+
+clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+cl1 = clahe.apply(img_bottom_grey)
+# cv2.imshow('img',cl1)
+# cv2.waitKey(100000)
+
+# mser = cv2.MSER()
+# mser_areas = mser.detect()
+
+vis = img_bottom_grey.copy()
+mser= cv2.MSER_create()
+regions = mser.detectRegions(img_bottom_grey, None)
+hulls = [cv2.convexHull(p.reshape(-1, 1, 2)) for p in regions]
+cv2.polylines(vis, hulls, 1, (0, 255, 0))
+cv2.imshow('img', vis)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
